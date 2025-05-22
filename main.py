@@ -26,8 +26,7 @@ def install_argos_models():
     for filename in os.listdir(model_dir):
         if filename.endswith(".argosmodel"):
             filepath = os.path.join(model_dir, filename)
-            with open(filepath, "rb") as f:
-                argostranslate.package.install_from_file(f)
+            argostranslate.package.install_from_path(filepath)
 
 
 install_argos_models()
