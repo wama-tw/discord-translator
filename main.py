@@ -44,7 +44,7 @@ def detect_language(text):
 def translate_text(text, from_lang, to_lang):
     for lang in installed_languages:
         if lang.code == from_lang:
-            translation = lang.get_translation(from_lang, to_lang)
+            translation = lang.get_translation(to_lang)
             return translation.translate(text)
     return None
 
