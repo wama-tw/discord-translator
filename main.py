@@ -98,8 +98,7 @@ async def on_message(message):
         print(f"❌ 翻譯失敗：{from_lang} → {to_lang}")
         return
     if translated.lower() != text.lower():
-        await message.channel.send(
-            f"```{from_lang} → {to_lang}```\n{translated}")
+        await message.channel.send(f"`{from_lang} → {to_lang}`\n{translated}")
 
 
 if __name__ == "__main__":
