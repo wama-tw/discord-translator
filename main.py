@@ -59,6 +59,7 @@ async def on_message(message):
         return
 
     translated = translate_text(original_text, detected_lang, target_lang)
+    print(f"Translated text: {translated}")
     if translated and translated.lower() != original_text.lower():
         await message.channel.send(
             f"🈯 翻譯（{detected_lang} → {target_lang}）：\n```{translated}```")
