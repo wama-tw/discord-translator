@@ -99,7 +99,7 @@ async def on_message(message):
         return
     if translated.lower() != text.lower():
         await message.channel.send(
-            f"🈯 翻譯（{from_lang} → {to_lang}）：\n```{translated}```")
+            f"```{from_lang} → {to_lang}```\n{translated}")
 
 
 if __name__ == "__main__":
