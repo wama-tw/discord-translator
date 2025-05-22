@@ -39,6 +39,8 @@ print([l.code for l in installed_languages])  # 列出已安裝語言包的語�
 
 # 偵測語言（用 fasttext）
 def detect_language(text):
+    # fasttext 只接受單行，需移除換行符號
+    text = text.replace('\n', ' ')
     lang, confidence = ft_model.predict(text)
     lang = lang[0].replace("__label__", "")
     return lang, confidence[0]
