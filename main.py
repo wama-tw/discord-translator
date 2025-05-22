@@ -1,9 +1,7 @@
 import discord
 from dotenv import load_dotenv
 import os
-
-# 新增的套件
-from langdetect import detect
+import fasttext
 import argostranslate.package
 import argostranslate.translate
 
@@ -13,60 +11,83 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-# 初始化 Argos Translate（確認已安裝語言包）
+# 載入 fastText 語言偵測模型
+FASTTEXT_MODEL_PATH = "lid.176.bin"
+if not os.path.exists(FASTTEXT_MODEL_PATH):
+    raise FileNotFoundError(
+        "請先下載 fastText 模型：wget https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
+    )
+ft_model = fasttext.load_model(FASTTEXT_MODEL_PATH)
+
+
+# 安裝語言包（一次性載入 langpacks 中的 .argosmodel）
+def install_argos_models():
+    model_dir = "langpacks"
+    for filename in os.listdir(model_dir):
+        if filename.endswith(".argosmodel"):
+            filepath = os.path.join(model_dir, filename)
+            with open(filepath, "rb") as f:
+                argostranslate.package.install_from_file(f)
+
+
+install_argos_models()
 installed_languages = argostranslate.translate.get_installed_languages()
+
+
+# 偵測語言（用 fasttext）
+def detect_language(text):
+    lang, confidence = ft_model.predict(text)
+    lang = lang[0].replace("__label__", "")
+    return lang, confidence[0]
+
+
+# Argos Translate 翻譯文字
+def translate_text(text, from_lang, to_lang):
+    for lang in installed_languages:
+        if lang.code == from_lang:
+            translation = lang.get_translation(from_lang, to_lang)
+            return translation.translate(text)
+    return None
 
 
 @client.event
 async def on_ready():
-    print(f"Logged in as {client.user}")
-
-
-def translate_text(text, from_lang, to_lang):
-    try:
-        for lang in installed_languages:
-            if lang.code == from_lang:
-                translation = lang.get_translation(from_lang, to_lang)
-                return translation.translate(text)
-    except Exception as e:
-        print("Translation error:", e)
-    return None
+    print(f"✅ Logged in as {client.user}")
 
 
 @client.event
 async def on_message(message):
     print(f"Received message: {message.content} from {message.author}")
     if message.author.bot:
-        print("Ignoring bot message")
         return
 
-    original_text = message.content
-    print(f"Original text: {original_text}")
-    try:
-        detected_lang = detect(original_text)
-    except Exception as e:
-        print("Language detection error:", e)
+    text = message.content
+    lang, conf = detect_language(text)
+    print(f"🧠 Detected: {lang} ({conf:.2f})")
+
+    if conf < 0.6:
+        print("⚠️ 信心度不足，略過翻譯")
         return
 
-    print(f"Detected language: {detected_lang}")
-
-    if detected_lang.startswith("en"):
-        target_lang = "zh"
-    elif detected_lang.startswith("zh"):
-        target_lang = "en"
+    # 判斷翻譯方向
+    if lang.startswith("en"):
+        from_lang = "en"
+        to_lang = "zt"
+    elif lang.startswith("zh"):
+        from_lang = "zt"
+        to_lang = "en"
     else:
-        print("Unsupported language")
+        print("⛔ 不支援的語言，略過")
         return
 
-    translated = translate_text(original_text, detected_lang, target_lang)
-    print(f"Translated text: {translated}")
-    if translated and translated.lower() != original_text.lower():
+    translated = translate_text(text, from_lang, to_lang)
+    if translated and translated.lower() != text.lower():
         await message.channel.send(
-            f"🈯 翻譯（{detected_lang} → {target_lang}）：\n```{translated}```")
+            f"🈯 翻譯（{from_lang} → {to_lang}）：\n```{translated}```")
 
 
 if __name__ == "__main__":
     token = os.getenv("BOT_TOKEN")
     if not token:
-        raise RuntimeError("BOT_TOKEN 環境變數未設定，請在 .env 檔案中加入 BOT_TOKEN=你的token")
+        raise RuntimeError("請在 .env 中設定 BOT_TOKEN")
     client.run(token)

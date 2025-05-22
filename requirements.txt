@@ -4,3 +4,4 @@ langdetect>=1.0.9
 numpy<2.0
 pyqt5>=5.15.9; platform_system != 'Linux'
 python-dotenv==1.0.1
+fasttext==0.9.3
