@@ -82,12 +82,12 @@ async def on_message(message):
         print("⚠️ 信心度不足，略過翻譯")
         return
 
-    # 判斷翻譯方向（根據實際語言包調整，這裡假設 zh）
+    # 判斷翻譯方向（根據實際語言包調整，這裡用 zt）
     if lang.startswith("en"):
         from_lang = "en"
-        to_lang = "zh"
-    elif lang.startswith("zh"):
-        from_lang = "zh"
+        to_lang = "zt"
+    elif lang.startswith("zh") or lang.startswith("zt"):
+        from_lang = "zt"
         to_lang = "en"
     else:
         print("⛔ 不支援的語言，略過")
